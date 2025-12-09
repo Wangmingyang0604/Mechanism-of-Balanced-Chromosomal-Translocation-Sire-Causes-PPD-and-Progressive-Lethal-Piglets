@@ -4,7 +4,7 @@
 #SBATCH -e /home/tmpdir/wangmingyang/HiC/log/job-%j_%a.err
 #SBATCH -o /home/tmpdir/wangmingyang/HiC/log/job-%j_%a.log
 #SBATCH -p fat
-#SBATCH --mem=30Gb
+#SBATCH --mem=200Gb
 #SBATCH -a 0-2
             
 
@@ -26,12 +26,22 @@ temp=/tmpdisk/${uid}_${ls_date}_${PBS_ARRAYID}
 mkdir ${temp}
 cd ${temp}
 pwd
-fastp="singularity exec /home/wangmingyang/software/fastp0.23.2.simg fastp"
+hicpro="singularity exec /home/wangmingyang/software/hicpro.sif /HiC-Pro_3.1.0/bin/HiC-Pro"
 bamfiles=(`ls ${input}/*_R1.fastq.gz`)
 mybam=${bamfiles[$PBS_ARRAYID]}
 sample=`basename ${mybam} _R1.fastq.gz`
 
-$fastp -i  ${input}/${sample}_R1.fastq.gz -I ${input}/${sample}_R2.fastq.gz -o clean_${sample}_R1.fastq.gz -O clean_${sample}_R2.fastq.gz -h ${sample}_report.html -j ${sample}_report.json --thread 20
+echo "HiC-Pro starting..."
+mkdir data
+mkdir -p data/hicpro
+mkdir Scripts
+mkdir Ref
+cp ${input}/config-hicpro.txt ./Scripts
+cp -r /home/wangmingyang/contain-Reference/ref ./Ref
+ln -s ${input}/${sample}_R1.fastq.gz  ./data/hicpro/${sample}_R1.fastq.gz
+ln -s ${input}/${sample}_R2.fastq.gz  ./data/hicpro/${sample}_R2.fastq.gz
+
+$hicpro  -i data/  -o results/ -c Scripts/config-hicpro.txt &&
 
 
 mkdir -p ${output}

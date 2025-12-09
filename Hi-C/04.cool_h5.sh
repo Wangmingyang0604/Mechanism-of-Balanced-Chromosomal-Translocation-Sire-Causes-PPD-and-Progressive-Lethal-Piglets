@@ -4,14 +4,14 @@
 #SBATCH -e /home/tmpdir/wangmingyang/HiC/log/job-%j_%a.err
 #SBATCH -o /home/tmpdir/wangmingyang/HiC/log/job-%j_%a.log
 #SBATCH -p fat
-#SBATCH --mem=30Gb
+#SBATCH --mem=100Gb
 #SBATCH -a 0-2
             
 
 
 ulimit -n 65536
 output=/home/tmpdir/wangmingyang/HiC/input
-input=/home/tmpdir/wangmingyang/reads/clean
+input=/home/tmpdir/wangmingyang/reads/clean  
 PBS_ARRAYID=${SLURM_ARRAY_TASK_ID} 
 array_jobid=${SLURM_ARRAY_JOB_ID}  
 jobid=${SLURM_JOB_ID}     
@@ -26,12 +26,18 @@ temp=/tmpdisk/${uid}_${ls_date}_${PBS_ARRAYID}
 mkdir ${temp}
 cd ${temp}
 pwd
-fastp="singularity exec /home/wangmingyang/software/fastp0.23.2.simg fastp"
-bamfiles=(`ls ${input}/*_R1.fastq.gz`)
-mybam=${bamfiles[$PBS_ARRAYID]}
-sample=`basename ${mybam} _R1.fastq.gz`
+cooler="singularity exec  /home/tmpdir/wangmingyang/software/02_HiCtools.sif cooler"
+hicConvertFormat="singularity exec -B /home/tmpdir/wangmingyang/HiC/D014output/results/hic_results/matrix/D014/raw:/mnt/wangmingyang /home/wangmingyang/software/hicexplorer_3_7_2.sif hicConvertFormat"
 
-$fastp -i  ${input}/${sample}_R1.fastq.gz -I ${input}/${sample}_R2.fastq.gz -o clean_${sample}_R1.fastq.gz -O clean_${sample}_R2.fastq.gz -h ${sample}_report.html -j ${sample}_report.json --thread 20
+bamfiles=(`ls ${input}/*.cool`)
+mybam=${bamfiles[$PBS_ARRAYID]}
+sample=`basename ${mybam} .cool`
+
+$cooler balance ${input}/${sample}.cool
+
+${hicConvertFormat} --matrices ${sample}.cool --inputFormat cool --outputFormat h5 -o ${sample}.h5
+
+
 
 
 mkdir -p ${output}

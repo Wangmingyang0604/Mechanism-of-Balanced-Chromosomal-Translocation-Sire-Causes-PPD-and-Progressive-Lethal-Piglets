@@ -1,0 +1,8 @@
+input=/home/tmpdir/wangmingyang/reads/single_cell
+ref=/home/tmpdir/wangmingyang/ref
+dnbc4tools="/home/wangmingyang/software/dnbc4tools/dnbc4tools"
+$dnbc4tools rna mkref --fasta ${ref}/susScr11.fa --ingtf ${input}/genes.filter.gtf --species susScr11_pig --threads 37
+
+
+
+
